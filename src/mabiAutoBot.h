@@ -22,7 +22,6 @@ public:
     void setWeight(string& weight) { m_weight = weight; }
     void setRatio(string ratio) { m_ratio = ratio; }
     void setItemDbId(string id) { m_itemDbId = id; }
-    void appendNickName(wstring nickName) { m_nickNames.push_back(nickName); }
     
     int buffId() const {return m_buffId;}
     int groupBuffId() const {return m_groupBuffId;}
@@ -34,13 +33,11 @@ public:
     string summonTime() const { return m_time; }
     string itemDbId() const { return m_itemDbId; }
     wstring botName() const { return m_botName; }
-    list<wstring> nickNames() const { return m_nickNames; }
 protected:
     int m_botId;
     string m_size;
     string m_volume;
     wstring m_botName;
-    list<wstring> m_nickNames;
     int m_buffId;
     wstring m_buff;
     string m_group;

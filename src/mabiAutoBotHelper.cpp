@@ -30,11 +30,6 @@ mabiAutoBotHelper::mabiAutoBotHelper()
 	_saveToXml(m_itemEtc, 1);
 	_saveToXml(m_itemScript, 2);
 	_boxAndCoupons();
-//    for (const auto& botIter : m_autoBots_itemdb){
-//        auto res = to_normal_string(botIter.second.botName());
-//        res = res.substr(0, res.size() - 6);
-//        cout << res << endl;
-//    }
 }
 
 mabiAutoBotHelper::~mabiAutoBotHelper()
@@ -384,30 +379,6 @@ void mabiAutoBotHelper::_parseGroupBuff(){
                 _autoBot.setGroupBuff(_groupBuffStr);
             }
         }
-   //     else{ // 组合包
-   //         auto _groupVec = stringSplit(_groupStr.c_str(), '/');
-   //         if (_groupVec.size() <= 0){
-   //             wcout << "failed to parse autoBot : " << _autoBot.botName() << endl;
-   //             continue;
-   //         }
-   //         for (const auto& _iterator : m_autoBots_itemdb) {
-   //             if (_iterator.first == atoi(_groupVec[1].c_str())) {
-   //                 wstring _groupBuffStr = _iterator.second.groupBuff();
-   //                 _autoBot.setBuff(_groupBuffStr);
-   //                 break;
-   //             }
-   //         }
-			//if (_autoBot.buff().length() == 0) {
-			//	vector<int> _groupIds;
-			//	for (const auto _groupPart : _groupVec) {
-			//		if (_groupPart.length() == 0) {
-			//			continue;
-			//		}
-			//		int _botId = atoi(_groupPart.c_str());
-			//		_groupIds.push_back(_botId);
-			//	}
-			//}
-   //     }
     }
 }
 
@@ -440,13 +411,6 @@ void mabiAutoBotHelper::_parseBotSetBuff()
 			auto _autoBotPart = m_autoBots_itemdb[_groupIds[1]];
 			wstring _groupBuffStr = _autoBotPart.groupBuff();
 			_autoBot.setBuff(_groupBuffStr);
-			/*for (const auto& _iterator : m_autoBots_itemdb) {
-			    if (_iterator.first == atoi(_groupVec[1].c_str())) {
-			        wstring _groupBuffStr = _iterator.second.groupBuff();
-			        _autoBot.setBuff(_groupBuffStr);
-			        break;
-			    }
-			}*/
 		}
 		_autoBotIterator = _autoBotIterator->NextSiblingElement();
 	}
@@ -502,7 +466,7 @@ void mabiAutoBotHelper::_saveToXml(XMLDocument* dataBase, int flag)
 				double __invY = atoi(_invY.c_str());
 				double _invSize = __invX * __invY;
 				if (m_autoBots_itemdb.find(_botId) != m_autoBots_itemdb.end()) {
-					auto& _autoBot = m_autoBots_itemdb[_botId];
+					auto _autoBot = m_autoBots_itemdb[_botId];
 					_autoBot.setVolume(_bagX + " x " + _bagY + " (贴包 + " + _bagX + ")");
 					double _ratio = _volumn / _invSize;
 					double _ratioCal = (_volumn + __bagX) / _invSize;
@@ -514,28 +478,13 @@ void mabiAutoBotHelper::_saveToXml(XMLDocument* dataBase, int flag)
 					smatch match;
 					regex_search(textNameId, match, reg);
 					if (flag == 0) {
-						if (_autoBot.botName().length() > 0) {
-							_autoBot.appendNickName(m_itemDbContent[match[0]]);
-						}
-						else {
-							_autoBot.setBotName(m_itemDbContent[match[0]]);
-						}
+						_autoBot.setBotName(m_itemDbContent[match[0]]);
 					}
 					else if (flag == 1){
-						if (_autoBot.botName().length() > 0) {
-							_autoBot.appendNickName(m_itemEtcContent[match[0]]);
-						}
-						else {
-							_autoBot.setBotName(m_itemEtcContent[match[0]]);
-						}
+						_autoBot.setBotName(m_itemEtcContent[match[0]]);
 					}
 					else {
-						if (_autoBot.botName().length() > 0) {
-							_autoBot.appendNickName(m_itemScriptContent[match[0]]);
-						}
-						else {
-							_autoBot.setBotName(m_itemScriptContent[match[0]]);
-						}
+						_autoBot.setBotName(m_itemScriptContent[match[0]]);
 					}
 
 					auto xmlId = itemDbIterator->Attribute("ID");
@@ -579,6 +528,7 @@ void mabiAutoBotHelper::_saveToXml(XMLDocument* dataBase, int flag)
 					toSave.SetBOM(true);
 					string filePath = m_resourceDir + "result/data/db/tooltipextension/" + xmlId + ".xml";
 					toSave.SaveFile(filePath.c_str());
+					m_itemIdToAutoBots.insert(make_pair(atoi(xmlId), _autoBot));
 				}
 			}
 		}
@@ -589,7 +539,7 @@ void mabiAutoBotHelper::_saveToXml(XMLDocument* dataBase, int flag)
 void mabiAutoBotHelper::_boxAndCoupons()
 {
 	for (const auto& iterator : m_boxAndCoupons) {
-        for (const auto& autoBotIterator : m_autoBots_itemdb){
+        for (const auto& autoBotIterator : m_itemIdToAutoBots){
             auto _botNameStr = to_normal_string(autoBotIterator.second.botName());
             int _index = _botNameStr.size() - 6;
             auto _textNameStr = to_normal_string(iterator.second);
@@ -604,22 +554,6 @@ void mabiAutoBotHelper::_boxAndCoupons()
                 _doc.SaveFile(__filePath.c_str());
                 break;
             }
-			auto _nickNames = autoBotIterator.second.nickNames();
-			if (_nickNames.size() > 0) {
-				for (const auto& nickName : _nickNames) {
-					auto _nickNameStr = to_normal_string(nickName);
-					auto __nickNameStr = _nickNameStr.substr(0, _index);
-					if (__nickNameStr == __textNameStr) {
-						string _filePath = m_resourceDir + "result/data/db/tooltipextension/" + autoBotIterator.second.itemDbId() + ".xml";
-						XMLDocument _doc;
-						_doc.LoadFile(_filePath.c_str());
-						_doc.SetBOM(true);
-						string __filePath = m_resourceDir + "result/data/db/tooltipextension/" + iterator.first + ".xml";
-						_doc.SaveFile(__filePath.c_str());
-						break;
-					}
-				}
-			}
         }
 	}
 }

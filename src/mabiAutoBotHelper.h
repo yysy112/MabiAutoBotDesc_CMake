@@ -37,6 +37,7 @@ private:
 	unordered_map<string, wstring> m_botNameContent;
 	unordered_map<string, mabiAutobot> m_autoBots;
     unordered_map<int, mabiAutobot> m_autoBots_itemdb;
+	unordered_map<int, mabiAutobot> m_itemIdToAutoBots;
     unordered_map<int, mabiBuffHelper> m_buffHelpers;
     unordered_map<int, int> m_botIdToBuffId;
     unordered_map<string, int> m_botStrIdToBuffId;
