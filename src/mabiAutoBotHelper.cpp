@@ -165,13 +165,23 @@ void mabiAutoBotHelper::_parseRace()
 #endif
 				_bot.setLocalName(_localName);
 				string _pickUps = _race->Attribute("ExtraData");
-				wstring pickUps = L"";
-				for (const auto& pickKey : m_botPickUpContent) {
-					if (_pickUps.find(pickKey.first) != string::npos) {
-						pickUps += pickKey.second + L" ";
+				auto _pickUpVec = stringSplit(_pickUps, ' ');
+				for (const auto& _str : _pickUpVec) {
+					if (_str.find("pickableItems") != string::npos || _str.find("pickableItemStringId") != string::npos) {
+						int index = _str.find_first_of('\"');
+						int _index = _str.find_last_of('\"');
+						string subs = _str.substr(index + 1, _index - index - 1);
+						if (subs.find(';') != string::npos) {
+							auto subVec = stringSplit(subs, ';');
+							for (const auto& sub : subVec) {
+								_bot.appendPickUps(sub);
+							}
+						}
+						else {
+							_bot.appendPickUps(subs);
+						}
 					}
 				}
-				_bot.setPickUps(pickUps);
 				m_autoBots.insert(make_pair(string(_race->Attribute("ClassName")), _bot));
 			}
 		}
@@ -199,18 +209,16 @@ void mabiAutoBotHelper::_parseAutoBot() {
 				auto _groupVec = stringSplit(_groupStr.c_str(), '/');
                 _autoBot.setBuffId(0);
                 _autoBot.setGroupBuffId(0);
-				wstring _pickUps;
 				for (const auto& _iterator : _groupVec) {
 					if (_iterator.length() > 0) {
 						for (const auto& __iterator : m_autoBots_itemdb) {
 							if (__iterator.first == atoi(_iterator.c_str())) {
-								_pickUps += __iterator.second.pickUp();
+								_autoBot.appendPickUps(__iterator.second.pickUp());
 								break;
 							}
 						}
 					}
 				}
-				_autoBot.setPickUps(_pickUps);
 				string _summonTime = _autoBotIterator->Attribute("SummonLimitTime");
 				_autoBot.setTime(_summonTime);
 				string _summonWeight = _autoBotIterator->Attribute("SummonWeight");
@@ -507,8 +515,16 @@ void mabiAutoBotHelper::_saveToXml(XMLDocument* dataBase, int flag)
 					XMLElement* summonSection = toSave.NewElement("section");
 					string _summonTitle = "召唤加成 (召唤栏位 " + _autoBot.weight() + ")";
 					summonSection->SetAttribute("title", _summonTitle.c_str());
-					string summonStr = "&#xA;&lt;color=3&gt;" + to_normal_string(_autoBot.buff()) + "&lt;/color&gt;&#xA;&lt;color=7&gt;拾取:&lt;/color&gt;&lt;color=3&gt;" + to_normal_string(_autoBot.pickUp()) + "&lt;/color&gt;&#xA;&#xA;&lt;color=7&gt;召唤时长: " + _autoBot.summonTime() + "分钟&lt;/color&gt;";
-					summonSection->SetAttribute("content", summonStr.c_str());
+					auto _pickUpList = _autoBot.pickUp();
+					wstring _pickUpStr = L"";
+					for (const auto& pickUp : _pickUpList) {
+						_pickUpStr += m_botPickUpContent[pickUp] + L" ";
+					}
+					if (_pickUpStr.length() == 0) {
+						wcout << "failed to parse the pick ups of :" << _autoBot.botName() << endl;
+						cout << _autoBot.itemDbId() << endl;
+					}
+					string summonStr = "&#xA;&lt;color=3&gt;" + to_normal_string(_autoBot.buff()) + "&lt;/color&gt;&#xA;&lt;color=7&gt;拾取:&lt;/color&gt;&lt;color=3&gt;" + to_normal_string(_pickUpStr) + "&lt;/color&gt;&#xA;&#xA;&lt;color=7&gt;召唤时长: " + _autoBot.summonTime() + "分钟&lt;/color&gt;";					summonSection->SetAttribute("content", summonStr.c_str());
 					_root->InsertEndChild(summonSection);
 
 					auto _groupStr = _autoBot.groupStr();

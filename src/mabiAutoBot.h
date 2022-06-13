@@ -29,7 +29,7 @@ public:
     string weight() const { return m_weight; }
     wstring buff() const { return m_buff; }
     wstring groupBuff() const { return m_groupBuff; }
-    wstring pickUp() const{ return m_pickUps; }
+    list<string> pickUp() const { return m_pickUps; }
     string summonTime() const { return m_time; }
     string itemDbId() const { return m_itemDbId; }
     wstring botName() const { return m_botName; }
